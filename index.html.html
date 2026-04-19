@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ためになるクソゲー大百科</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Kaisei+Decol:wght@400;700&family=Rampart+One&display=swap');
+
+  :root {
+    --red: #e8001e;
+    --yellow: #ffe000;
+    --blue: #0038a8;
+    --green: #00a846;
+    --black: #111;
+    --white: #fffde8;
+    --pink: #ff69b4;
+    --orange: #ff6a00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DotGothic16', monospace;
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    padding-bottom: 40px;
+  }
+
+  /* SCANLINE EFFECT */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.18) 2px,
+      rgba(0,0,0,0.18) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* MARQUEE TICKER */
+  .ticker-wrap {
+    width: 100%;
+    background: var(--red);
+    overflow: hidden;
+    border-bottom: 3px solid var(--yellow);
+    padding: 4px 0;
+  }
+  .ticker {
+    display: inline-block;
+    white-space: nowrap;
+    animation: ticker 18s linear infinite;
+    font-size: 13px;
+    color: var(--yellow);
+    letter-spacing: 2px;
+  }
+  @keyframes ticker {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* LOGO / TITLE */
+  .logo-area {
+    width: 100%;
+    background: linear-gradient(180deg, #1a0000 0%, #3d0000 50%, #1a0000 100%);
+    border-bottom: 4px double var(--yellow);
+    text-align: center;
+    padding: 10px 16px 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .logo-area::before {
+    content: '★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★';
+    position: absolute;
+    top: 4px; left: 0; right: 0;
+    font-size: 10px;
+    color: var(--yellow);
+    opacity: 0.5;
+    letter-spacing: 4px;
+  }
+  .logo-title {
+    font-family: 'Rampart One', cursive;
+    font-size: clamp(22px, 7vw, 36px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--red), 6px 6px 0 #5a0000, 0 0 20px #ff6;
+    line-height: 1.1;
+    animation: flash 2.5s step-end infinite;
+  }
+  @keyframes flash {
+    0%, 90% { opacity: 1; }
+    91%, 95% { opacity: 0.3; }
+    96%, 100% { opacity: 1; }
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--yellow);
+  }
+  .score-val { color: #fff; font-size: 18px; font-family: 'Kaisei Decol', serif; }
+
+  /* MAIN CARD */
+  .main {
+    width: 100%;
+    max-width: 480px;
+    padding: 12px 14px;
+  }
+
+  .card {
+    background: linear-gradient(135deg, #111 0%, #1a1a2e 100%);
+    border: 3px solid var(--yellow);
+    border-radius: 4px;
+    padding: 16px;
+    position: relative;
+    margin-bottom: 12px;
+    box-shadow: 4px 4px 0 var(--red), inset 0 0 40px rgba(255,224,0,0.04);
+  }
+  .card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -14px; left: 10px;
+    background: var(--red);
+    color: var(--yellow);
+    font-family: 'Rampart One', cursive;
+    font-size: 13px;
+    padding: 0 10px 2px;
+    border: 2px solid var(--yellow);
+  }
+
+  /* QUESTION */
+  .q-category {
+    font-size: 10px;
+    color: var(--pink);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .q-text {
+    font-family: 'Kaisei Decol', serif;
+    font-size: clamp(15px, 4.5vw, 19px);
+    line-height: 1.6;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .q-hint {
+    font-size: 10px;
+    color: #666;
+    font-style: italic;
+  }
+
+  /* CHOICES */
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .choice-btn {
+    background: #1a1a1a;
+    border: 2px solid #444;
+    color: var(--white);
+    font-family: 'DotGothic16', monospace;
+    font-size: 13px;
+    padding: 12px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.4;
+    transition: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .choice-btn:hover:not(:disabled) {
+    background: #2a2a2a;
+    border-color: var(--yellow);
+    color: var(--yellow);
+  }
+  .choice-btn.correct {
+    background: var(--green);
+    border-color: #00ff6a;
+    color: #fff;
+    animation: correctPulse 0.4s ease;
+  }
+  .choice-btn.wrong {
+    background: var(--red);
+    border-color: #ff4444;
+    color: #fff;
+    animation: wrongShake 0.4s ease;
+  }
+  .choice-btn.reveal-correct {
+    background: #004020;
+    border-color: var(--green);
+    color: #7fff9a;
+  }
+  .choice-btn:disabled { cursor: default; opacity: 0.8; }
+
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wrongShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* FEEDBACK BOX */
+  .feedback {
+    margin-top: 14px;
+    border: 2px dashed var(--yellow);
+    padding: 12px;
+    background: rgba(255,224,0,0.04);
+    display: none;
+    position: relative;
+  }
+  .feedback.show { display: block; animation: fadeInUp 0.3s ease; }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .feedback-icon {
+    font-size: 28px;
+    display: block;
+    text-align: center;
+    margin-bottom: 6px;
+    animation: bounce 0.5s ease;
+  }
+  @keyframes bounce {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .feedback-result {
+    text-align: center;
+    font-family: 'Rampart One', cursive;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .feedback-result.ok { color: #00ff6a; text-shadow: 0 0 10px #0f0; }
+  .feedback-result.ng { color: var(--red); text-shadow: 0 0 10px var(--red); }
+  .feedback-body {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #ddd;
+  }
+  .trivia-fact {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(0,56,168,0.3);
+    border-left: 3px solid var(--blue);
+    font-size: 12px;
+    color: #aad4ff;
+    line-height: 1.6;
+  }
+
+  /* NEXT BUTTON */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 12px;
+    background: var(--yellow);
+    color: var(--black);
+    border: none;
+    font-family: 'Rampart One', cursive;
+    font-size: 16px;
+    padding: 14px;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 2px;
+    box-shadow: 4px 4px 0 #8a7000;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .next-btn.show { display: block; }
+  .next-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #8a7000;
+  }
+
+  /* PROGRESS */
+  .progress-wrap {
+    height: 6px;
+    background: #222;
+    border: 1px solid #444;
+    margin-bottom: 12px;
+    border-radius: 0;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), var(--yellow));
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px var(--yellow);
+  }
+
+  /* COMBO */
+  .combo-display {
+    text-align: center;
+    font-family: 'Rampart One', cursive;
+    font-size: 13px;
+    color: var(--orange);
+    height: 20px;
+    margin-bottom: 6px;
+  }
+
+  /* RESULT SCREEN */
+  .result-screen {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+  .result-screen.show { display: block; }
+  .result-title {
+    font-family: 'Rampart One', cursive;
+    font-size: clamp(26px, 8vw, 42px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--red);
+    margin-bottom: 8px;
+    animation: flash 1.5s step-end infinite;
+  }
+  .result-score {
+    font-size: clamp(40px, 12vw, 64px);
+    color: #fff;
+    font-family: 'Kaisei Decol', serif;
+    margin: 10px 0;
+  }
+  .result-rank {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  .result-comment {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #ccc;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #444;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .restart-btn {
+    background: var(--red);
+    color: var(--yellow);
+    border: 3px solid var(--yellow);
+    font-family: 'Rampart One', cursive;
+    font-size: 18px;
+    padding: 14px 40px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 4px 4px 0 #8a0000;
+    animation: jiggle 1.5s ease infinite;
+  }
+  @keyframes jiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-1.5deg); }
+    75% { transform: rotate(1.5deg); }
+  }
+
+  /* STAMP */
+  .stamp {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg) scale(0);
+    font-family: 'Rampart One', cursive;
+    font-size: 42px;
+    font-weight: 900;
+    border: 4px solid;
+    padding: 4px 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.15s, opacity 0.15s;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .stamp.correct-stamp { color: var(--green); border-color: var(--green); text-shadow: 2px 2px 0 rgba(0,200,80,0.3); }
+  .stamp.wrong-stamp { color: var(--red); border-color: var(--red); text-shadow: 2px 2px 0 rgba(200,0,0,0.3); }
+  .stamp.active { transform: translate(-50%, -50%) rotate(-15deg) scale(1); opacity: 0.85; }
+
+  /* SOUND FX TEXT */
+  .sfx {
+    position: fixed;
+    font-family: 'Rampart One', cursive;
+    font-size: 28px;
+    color: var(--yellow);
+    text-shadow: 2px 2px 0 var(--red);
+    pointer-events: none;
+    z-index: 1000;
+    animation: sfxPop 0.8s ease forwards;
+  }
+  @keyframes sfxPop {
+    0% { opacity: 1; transform: scale(0.5) translateY(0); }
+    50% { opacity: 1; transform: scale(1.4) translateY(-20px); }
+    100% { opacity: 0; transform: scale(1) translateY(-50px); }
+  }
+
+  /* BLINKING ELEMENTS */
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* STAR DECORATION */
+  .deco-stars {
+    font-size: 10px;
+    color: var(--yellow);
+    text-align: center;
+    letter-spacing: 6px;
+    padding: 4px;
+    opacity: 0.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker-wrap">
+  <span class="ticker">★ ためになるクソゲー大百科 ★ 知識は力だ！でも正解してもたいして褒めないよ ★ 嘘みたいな本当の話が盛りだくさん ★ 全問正解しても「ふーん」としか言わない ★ 勉強になったかどうかは自己責任です ★</span>
+</div>
+
+<div class="logo-area">
+  <div class="logo-title">ためになる<br>クソゲー大百科</div>
+  <div class="logo-sub">～ 役に立つかもしれない雑学クイズ ～</div>
+  <div class="score-bar">
+    <span>スコア：<span class="score-val" id="scoreDisplay">0</span>点</span>
+    <span id="qCountDisplay">1 / 8問</span>
+    <span>コンボ：<span id="comboSmall">0</span>🔥</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="combo-display" id="comboDisplay"></div>
+
+  <!-- QUIZ CARD -->
+  <div id="quizArea">
+    <div class="card" id="quizCard" data-num="Q.?">
+      <div class="stamp" id="stamp"></div>
+      <div class="q-category" id="qCategory">カテゴリ</div>
+      <div class="q-text" id="qText">問題文がここに入ります</div>
+      <div class="q-hint" id="qHint"></div>
+      <div class="choices" id="choicesArea"></div>
+      <div class="feedback" id="feedback">
+        <span class="feedback-icon" id="fbIcon"></span>
+        <div class="feedback-result" id="fbResult"></div>
+        <div class="feedback-body" id="fbBody"></div>
+        <div class="trivia-fact" id="fbFact"></div>
+      </div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">つぎへ ▶▶</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="result-screen" id="resultScreen">
+    <div class="deco-stars">★ ★ ★ ★ ★ ★ ★</div>
+    <div class="result-title" id="resultTitle">けっか発表！</div>
+    <div class="result-score"><span id="finalScore">0</span>点</div>
+    <div class="result-rank" id="resultRank"></div>
+    <div class="result-comment" id="resultComment"></div>
+    <button class="restart-btn" onclick="restartGame()">もういちど！</button>
+    <div class="deco-stars" style="margin-top:16px">★ ★ ★ ★ ★ ★ ★</div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    category: "🐟 生き物の話",
+    q: "タコの心臓は何個あるでしょうか？",
+    hint: "「多い」と思ったら多い方向で考えよう",
+    choices: ["1個", "2個", "3個", "5個"],
+    answer: 2,
+    sfx_ok: "スゴイね（棒）",
+    sfx_ng: "ざんねーん",
+    fb_ok: "まあ正解ですけど何か？",
+    fb_ng: "タコに申し訳なくないですか？",
+    fact: "タコは心臓を3つ持っています。体全体に血液を送るメインの心臓が1つ、エラに血液を送る心臓が2つ。しかも血の色は青い。どんだけ特別扱いされてんだタコ。"
+  },
+  {
+    category: "🌏 地理・国の話",
+    q: "「世界で一番高い山」はエベレストですが、「地球の中心から一番遠い山頂」は別の山です。どこでしょう？",
+    hint: "地球は完全な球体ではありません（これがヒント）",
+    choices: ["キリマンジャロ", "チョ・オユー", "チンボラソ", "モンブラン"],
+    answer: 2,
+    sfx_ok: "あ、知ってたの",
+    sfx_ng: "まあそうですよね",
+    fb_ok: "正解！でも知ってても別に自慢できないやつです",
+    fb_ng: "エベレスト一択と思ったでしょ。地球って実は赤道付近がふくらんでるんです",
+    fact: "地球は完全な球体でなく赤道付近が膨らんだ回転楕円体。チンボラソ山（南米エクアドル）は標高6,263mですが、赤道に近いため地球の中心からの距離はエベレストより長い。「高さ」の定義って何だ。"
+  },
+  {
+    category: "🧪 科学の話",
+    q: "ダイヤモンドは何でできているでしょうか？",
+    hint: "鉛筆と同じ材料です（マジで）",
+    choices: ["シリコン", "炭素", "窒素", "カルシウム"],
+    answer: 1,
+    sfx_ok: "知ってて当然ですけどね",
+    sfx_ng: "え〜〜〜〜",
+    fb_ok: "正解。でも問題が簡単すぎましたね。次はもっとイジワルにします",
+    fb_ng: "鉛筆の芯（グラファイト）もダイヤモンドも炭素の塊です。配列が違うだけで価値が億倍違う。世の中そういうもんです",
+    fact: "ダイヤモンドと鉛筆の芯（グラファイト）はどちらも純粋な炭素。原子の並び方が違うだけ。理論上、超高圧・高温でグラファイトをダイヤモンドにできますが、コストがバカ高くて宝石用途では採算が合いません。"
+  },
+  {
+    category: "🍜 食べ物の話",
+    q: "以下のうち、日本で「ラーメン」として最初に広まったとされる調理法に近いのはどれ？",
+    hint: "明治時代の横浜中華街あたりが発祥とされています",
+    choices: ["塩ラーメン", "しょうゆラーメン", "みそラーメン", "とんこつラーメン"],
+    answer: 1,
+    sfx_ok: "へぇ〜（やや驚き）",
+    sfx_ng: "豚骨好きですね",
+    fb_ok: "正解！でも正直これは諸説あるので外れても文句言えません",
+    fb_ng: "しょうゆ味が最初期に広まったとされています。とんこつは戦後に九州で発展した比較的あとのジャンルです",
+    fact: "ラーメンの起源は中国の麺料理。日本への定着は明治・大正期の中華街近辺からで、しょうゆベースが先に全国普及。みそは札幌が戦後に独自開発、とんこつは福岡・久留米が戦後発祥とされています。全部美味しいのでどうでもいいかもしれません。"
+  },
+  {
+    category: "🤔 言葉・語源の話",
+    q: "「アルバイト」はどの国の言葉が語源でしょうか？",
+    hint: "日本語でも英語でもない",
+    choices: ["フランス語", "ドイツ語", "オランダ語", "ロシア語"],
+    answer: 1,
+    sfx_ok: "ドイツ語好きですか？",
+    sfx_ng: "フランス語感あるけど違います",
+    fb_ok: "正解！Arbeit（アルバイト）はドイツ語で「労働」という意味です",
+    fb_ng: "ドイツ語の「Arbeit（アルバイト）」が語源で、意味は「労働」です。日本では戦前に学生の副業的な仕事を指す言葉として定着しました",
+    fact: "ドイツ語Arbeitは「労働・仕事」全般を指す言葉。日本には戦前、ドイツ留学経験者などを通じて入ってきました。本家ドイツでは単に「仕事」なので、「アルバイト募集」を見たドイツ人は求人広告だと普通に思います。"
+  },
+  {
+    category: "🎵 音楽の話（ひっかけ）",
+    q: "「ド・レ・ミ・ファ・ソ・ラ・シ」の7音。この名前はある賛美歌の各フレーズの頭文字から来ていますが、「ド」だけは後から改名されました。では元々の「ド」の名前は何だったでしょうか？",
+    hint: "神様っぽい名前かもしれない…",
+    choices: ["ウ（Ut）", "エ（Et）", "オ（Or）", "ア（Ah）"],
+    answer: 0,
+    sfx_ok: "マジで知ってたの？すごすぎ",
+    sfx_ng: "知らなくて当然です。マイナーすぎる",
+    fb_ok: "正解！ラテン語「Ut queant laxis」の頭文字「Ut」が元の「ド」でした",
+    fb_ng: "正解は「Ut（ウ）」。11世紀にグイード・ダレッツォが賛美歌「Ut queant laxis」の各フレーズ頭から音名を作りました。その後「Ut」は発音しにくいので「Do（ド）」に改名されました",
+    fact: "現在のドレミは11世紀のイタリア人修道士グイード・ダレッツォが考案。ラテン語賛美歌の各フレーズ頭文字から命名。Ut(ド), Re(レ), Mi(ミ), Fa(ファ), Sol(ソ), La(ラ), Si(シ)。後に「Si」は英語圏で「Ti」になったり「Do」になったり。混乱を生む天才たちです。"
+  },
+  {
+    category: "🐘 生き物の話（ひっかけ）",
+    q: "象は泳げると思いますか？",
+    hint: "「象が…まさかね…」という先入観でどうぞ",
+    choices: ["泳げる", "泳げない", "水に入ると溺れる", "水が嫌いで近づかない"],
+    answer: 0,
+    sfx_ok: "なぜわかった！？",
+    sfx_ng: "あ〜〜〜〜〜（無慈悲）",
+    fb_ok: "正解！象は泳ぎが得意です。巨体なのに鼻をシュノーケル代わりにします",
+    fb_ng: "象は泳ぎが得意です！長い鼻をシュノーケルのように水面に出して泳ぎます。スリランカからインド本土まで泳いで渡った記録も",
+    fact: "ゾウは優秀な泳者です。巨体が水中では浮力で支えられ、長い鼻を水面に出して呼吸しながら泳ぎます。スリランカのゾウが海峡を渡ってインドへ泳ぎ着いた記録があります。体重5トンで泳ぐ姿は見てみたいものです。"
+  },
+  {
+    category: "🔢 数学の話（難問）",
+    q: "1から100までの整数をすべて足すといくつになるでしょうか？",
+    hint: "ガウス少年が一瞬で解いた問題として有名（暗算でやると正解します）",
+    choices: ["4950", "5000", "5050", "5100"],
+    answer: 2,
+    sfx_ok: "ガウスと同じ方法で解きましたか？",
+    sfx_ng: "惜しい！でも惜しいだけです",
+    fb_ok: "正解！1+100=101、2+99=101…これが50組で101×50=5050",
+    fb_ng: "正解は5050。(1+100)×100÷2=5050。ガウス少年が小学生の時に1秒で解いたとされる方法で計算できます",
+    fact: "1+2+3+…+n = n(n+1)/2 という公式は、数学者ガウスが幼少期に授業中の計算問題で一瞬で答えたエピソードとして有名。両端を足すと全部101になる組が50組ある、という直感が素晴らしい。大人でも気づけないことが多い。"
+  }
+];
+
+let currentQ = 0;
+let score = 0;
+let combo = 0;
+let answered = false;
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let questionOrder = shuffleArray([...Array(QUESTIONS.length).keys()]);
+
+function loadQuestion() {
+  answered = false;
+  const qi = questionOrder[currentQ];
+  const q = QUESTIONS[qi];
+
+  document.getElementById('quizCard').setAttribute('data-num', `Q.${currentQ + 1}`);
+  document.getElementById('qCategory').textContent = q.category;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qHint').textContent = q.hint ? `💡 ${q.hint}` : '';
+  document.getElementById('qCountDisplay').textContent = `${currentQ + 1} / ${QUESTIONS.length}問`;
+
+  // Progress
+  document.getElementById('progressBar').style.width = `${(currentQ / QUESTIONS.length) * 100}%`;
+
+  // Reset stamp
+  const stamp = document.getElementById('stamp');
+  stamp.className = 'stamp';
+  stamp.textContent = '';
+
+  // Reset feedback
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback';
+
+  // Reset next btn
+  document.getElementById('nextBtn').className = 'next-btn';
+
+  // Choices
+  const area = document.getElementById('choicesArea');
+  area.innerHTML = '';
+
+  // Shuffle choices
+  const indices = [0, 1, 2, 3];
+  const shuffled = shuffleArray(indices);
+  const newAnswerIdx = shuffled.indexOf(q.answer);
+
+  shuffled.forEach((origIdx, newIdx) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = q.choices[origIdx];
+    btn.onclick = () => handleAnswer(newIdx, newAnswerIdx, qi);
+    area.appendChild(btn);
+  });
+}
+
+function handleAnswer(chosen, correct, qi) {
+  if (answered) return;
+  answered = true;
+  const q = QUESTIONS[qi];
+  const btns = document.querySelectorAll('.choice-btn');
+  const isCorrect = chosen === correct;
+
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === correct) b.classList.add('reveal-correct');
+  });
+
+  const stamp = document.getElementById('stamp');
+  const fb = document.getElementById('feedback');
+
+  if (isCorrect) {
+    btns[chosen].classList.remove('reveal-correct');
+    btns[chosen].classList.add('correct');
+    combo++;
+    const pts = combo >= 3 ? 150 : combo >= 2 ? 120 : 100;
+    score += pts;
+    document.getElementById('scoreDisplay').textContent = score;
+
+    stamp.textContent = '正解！';
+    stamp.className = 'stamp correct-stamp active';
+
+    showSFX(q.sfx_ok);
+
+    document.getElementById('comboSmall').textContent = combo;
+    if (combo >= 2) {
+      document.getElementById('comboDisplay').textContent = `🔥 ${combo}連続正解！`;
+    } else {
+      document.getElementById('comboDisplay').textContent = '';
+    }
+
+    document.getElementById('fbIcon').textContent = '😐';
+    document.getElementById('fbResult').textContent = q.sfx_ok;
+    document.getElementById('fbResult').className = 'feedback-result ok';
+    document.getElementById('fbBody').textContent = q.fb_ok;
+  } else {
+    btns[chosen].classList.add('wrong');
+    combo = 0;
+    document.getElementById('comboSmall').textContent = 0;
+    document.getElementById('comboDisplay').textContent = '';
+
+    stamp.textContent = 'ざんねん';
+    stamp.className = 'stamp wrong-stamp active';
+
+    showSFX(q.sfx_ng);
+
+    document.getElementById('fbIcon').textContent = '🙃';
+    document.getElementById('fbResult').textContent = q.sfx_ng;
+    document.getElementById('fbResult').className = 'feedback-result ng';
+    document.getElementById('fbBody').textContent = q.fb_ng;
+  }
+
+  document.getElementById('fbFact').textContent = '📚 ' + q.fact;
+  fb.className = 'feedback show';
+
+  setTimeout(() => {
+    stamp.className = stamp.className.replace(' active', '');
+  }, 1200);
+
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= QUESTIONS.length) {
+    showResult();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('progressBar').style.width = '100%';
+
+  const rs = document.getElementById('resultScreen');
+  rs.className = 'result-screen show';
+
+  document.getElementById('finalScore').textContent = score;
+
+  const maxScore = QUESTIONS.length * 150;
+  const pct = score / maxScore;
+
+  let rank, comment, title;
+  if (pct >= 0.9) {
+    rank = '🏆 Sランク';
+    title = '天才！！（のはず）';
+    comment = '全問ほぼ正解！すごいじゃないですか。でも知識は知識。それで何かが変わるわけじゃないですけど、まあ飲み会で使えるかもしれません。そういう飲み会があれば。';
+  } else if (pct >= 0.7) {
+    rank = '🥈 Aランク';
+    title = 'なかなかです';
+    comment = 'いい感じです。惜しかった問題もあったんじゃないですか？人生って惜しいことの繰り返しですよね。でもこのゲームでは+20点するだけなのでどうでもいいです。';
+  } else if (pct >= 0.5) {
+    rank = '🥉 Bランク';
+    title = 'まあまあです';
+    comment = '半分以上は正解できました。うん、まあ、そうですね。雑学は急に身につくものじゃないのでこつこつやっていきましょう。こつこつ。このゲームをまたやればいいです。';
+  } else if (pct >= 0.3) {
+    rank = '😶 Cランク';
+    title = 'うーん…';
+    comment = 'まあ最初はこんなもんです。知らなかった知識は学べましたよね？それだけでこのゲームの役割は果たしました。別に傷つく必要はありません。ゲームですから。';
+  } else {
+    rank = '💀 Dランク';
+    title = 'ドンマイ！（棒）';
+    comment = 'スコアはアレですが、それよりも今日学んだ雑学のほうが大事です。タコの心臓3つ、ガウスの計算法、チンボラソ。これらを覚えて帰ればこのゲームをやった意味があります。';
+  }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultRank').textContent = rank;
+  document.getElementById('resultComment').textContent = comment;
+}
+
+function restartGame() {
+  currentQ = 0;
+  score = 0;
+  combo = 0;
+  questionOrder = shuffleArray([...Array(QUESTIONS.length).keys()]);
+  document.getElementById('scoreDisplay').textContent = 0;
+  document.getElementById('comboSmall').textContent = 0;
+  document.getElementById('comboDisplay').textContent = '';
+  document.getElementById('resultScreen').className = 'result-screen';
+  document.getElementById('quizArea').style.display = 'block';
+  document.getElementById('progressBar').style.width = '0%';
+  loadQuestion();
+}
+
+function showSFX(text) {
+  const el = document.createElement('div');
+  el.className = 'sfx';
+  el.textContent = text;
+  el.style.top = `${30 + Math.random() * 30}%`;
+  el.style.left = `${10 + Math.random() * 60}%`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+// START
+loadQuestion();
+</script>
+</body>
+</html>
